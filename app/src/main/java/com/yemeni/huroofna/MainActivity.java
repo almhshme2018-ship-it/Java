@@ -1,4 +1,5 @@
 package com.yemeni.huroofna;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
@@ -6,29 +7,60 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 public class MainActivity extends Activity {
 
-    LinearLayout mainLayout;
-    SharedPreferences prefs;
-    String studentName;
-    int stars;
+    private LinearLayout root;
+    private SharedPreferences prefs;
+    private TextToSpeech tts;
 
-    String[] letters = {
-            "ا", "ب", "ت", "ث", "ج", "ح", "خ",
-            "د", "ذ", "ر", "ز", "س", "ش", "ص",
-            "ض", "ط", "ظ", "ع", "غ", "ف", "ق",
-            "ك", "ل", "م", "ن", "ه", "و", "ي"
+    private String studentName = "";
+    private int stars = 0;
+
+    private final String[] letters = {
+            "ا","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش",
+            "ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","هـ","و","ي"
     };
 
-    String[] letterNames = {
-            "ألف", "باء", "تاء", "ثاء", "جيم", "حاء", "خاء",
-            "دال", "ذال", "راء", "زاي", "سين", "شين", "صاد",
-            "ضاد", "طاء", "ظاء", "عين", "غين", "فاء", "قاف",
-            "كاف", "لام", "ميم", "نون", "هاء", "واو", "ياء"
+    private final String[] letterNames = {
+            "ألف","باء","تاء","ثاء","جيم","حاء","خاء","دال","ذال",
+            "راء","زاي","سين","شين","صاد","ضاد","طاء","ظاء","عين",
+            "غين","فاء","قاف","كاف","لام","ميم","نون","هاء","واو","ياء"
+    };
+
+    private final String[] words = {
+            "أسد","بطة","تفاحة","ثعلب","جمل","حصان","خروف","دب",
+            "ذرة","رمان","زهرة","سمكة","شمس","صقر","ضفدع","طائرة",
+            "ظرف","عنب","غزال","فيل","قمر","كتاب","ليمون","موز",
+            "نحلة","هلال","وردة","يد"
+    };
+
+    private final String[] emoji = {
+            "🦁","🦆","🍎","🦊","🐪","🐎","🐑","🐻",
+            "🌽","🍎","🌸","🐟","☀️","🦅","🐸","✈️",
+            "✉️","🍇","🦌","🐘","🌙","📖","🍋","🍌",
+            "🐝","🌙","🌹","✋"
+    };
+
+    private final String[] numbers = {
+            "١","٢","٣","٤","٥","٦","٧","٨","٩","١٠"
+    };
+
+    private final String[] numberPictures = {
+            "🍎","🍎🍎","🍎🍎🍎","🍎🍎🍎🍎",
+            "🍎🍎🍎🍎🍎","⭐️⭐️⭐️⭐️⭐️⭐️",
+            "🌸🌸🌸🌸🌸🌸🌸",
+            "🟢🟢🟢🟢🟢🟢🟢🟢",
+            "🐟🐟🐟🐟🐟🐟🐟🐟🐟",
+            "⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️"
     };
 
     @Override
@@ -37,510 +69,195 @@ public class MainActivity extends Activity {
 
         getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
 
-        prefs = getSharedPreferences("Huroofna", Context.MODE_PRIVATE);
-        studentName = prefs.getString("student", "");
+        prefs = getSharedPreferences("HuroofnaData", MODE_PRIVATE);
 
+        studentName = prefs.getString("student", "");
         stars = prefs.getInt("stars", 0);
 
+        tts = new TextToSpeech(this, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                tts.setLanguage(new Locale("ar"));
+                tts.setSpeechRate(0.75f);
+            }
+        });
+
         if (studentName.isEmpty()) {
-            showStudentDialog();
+            askStudentName();
         } else {
             showHome();
         }
     }
 
-    private void showStudentDialog() {
-
+    private void askStudentName() {
         final EditText input = new EditText(this);
         input.setHint("اكتب اسم الطالب");
-        input.setTextSize(20);
         input.setGravity(Gravity.CENTER);
-        input.setPadding(20, 20, 20, 20);
+        input.setTextSize(20);
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("👦 مرحبًا بك في حروفنا")
-                .setMessage("أدخل اسم الطالب للبدء")
+        new AlertDialog.Builder(this)
+                .setTitle("مرحبًا بك في حروفنا 🌟")
+                .setMessage("اكتب اسم الطالب للبدء")
                 .setView(input)
                 .setCancelable(false)
-                .setPositiveButton("بدء التعلم", null)
-                .create();
+                .setPositiveButton("ابدأ", (dialog, which) -> {
+                    String name = input.getText().toString().trim();
 
-        dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                    .setOnClickListener(v -> {
+                    if (name.isEmpty()) {
+                        name = "الطالب";
+                    }
 
-                        String name = input.getText().toString().trim();
+                    studentName = name;
 
-                        if (name.isEmpty()) {
-                            input.setError("اكتب اسم الطالب");
-                            return;
-                        }
+                    prefs.edit()
+                            .putString("student", studentName)
+                            .apply();
 
-                        studentName = name;
-                        stars = 0;
-
-                        prefs.edit()
-                                .putString("student", studentName)
-                                .putInt("stars", stars)
-                                .apply();
-
-                        dialog.dismiss();
-                        showHome();
-                    });
-        });
-
-        dialog.show();
+                    showHome();
+                })
+                .show();
     }
 
-    private void showHome() {
-
-        mainLayout = new LinearLayout(this);
-        mainLayout.setOrientation(LinearLayout.VERTICAL);
-        mainLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-        mainLayout.setPadding(20, 20, 20, 20);
-        mainLayout.setBackgroundColor(Color.rgb(248, 250, 255));
+    private void prepareRoot() {
+        root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER_HORIZONTAL);
+        root.setPadding(18, 18, 18, 18);
+        root.setBackgroundColor(Color.rgb(245, 249, 255));
 
         ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.addView(mainLayout);
+        scroll.addView(root);
 
         setContentView(scroll);
-
-        TextView title = textView(
-                "حروفنا",
-                34,
-                Color.rgb(25, 95, 180)
-        );
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        mainLayout.addView(title);
-
-        TextView welcome = textView(
-                "مرحبًا يا " + studentName + " 🌟",
-                23,
-                Color.DKGRAY
-        );
-        mainLayout.addView(welcome);
-
-        TextView starView = textView(
-                "⭐ نجومك: " + stars,
-                21,
-                Color.rgb(230, 150, 0)
-        );
-        mainLayout.addView(starView);
-
-        addSpace();
-
-        Button lettersButton = menuButton("🔤 الحروف الهجائية");
-        lettersButton.setOnClickListener(v -> showLetters());
-        mainLayout.addView(lettersButton);
-
-        Button soundButton = menuButton("🔊 نطق الحروف");
-        soundButton.setOnClickListener(v -> showLetters());
-        mainLayout.addView(soundButton);
-
-        Button movementsButton = menuButton("َ ِ ُ  الحركات");
-        movementsButton.setOnClickListener(v -> showMovements());
-        mainLayout.addView(movementsButton);
-
-        Button maddButton = menuButton("📏 المدود والمقاطع الأساسية");
-        maddButton.setOnClickListener(v -> showMadd());
-        mainLayout.addView(maddButton);
-
-        Button wordsButton = menuButton("🧩 الكلمات");
-        wordsButton.setOnClickListener(v -> showWords());
-        mainLayout.addView(wordsButton);
-
-        Button sentencesButton = menuButton("📖 الجمل");
-        sentencesButton.setOnClickListener(v -> showSentences());
-        mainLayout.addView(sentencesButton);
-
-        Button understandingButton = menuButton("🧠 تدريبات الفهم");
-        understandingButton.setOnClickListener(v -> showUnderstanding());
-        mainLayout.addView(understandingButton);
-
-        Button gameButton = menuButton("🎮 لعبة تمييز الحرف");
-        gameButton.setOnClickListener(v -> showGame());
-        mainLayout.addView(gameButton);
-
-        Button writingButton = menuButton("✍️ تدريب الكتابة");
-        writingButton.setOnClickListener(v -> showWriting());
-        mainLayout.addView(writingButton);
-
-        Button progressButton = menuButton("⭐ التقدم والنجوم");
-        progressButton.setOnClickListener(v -> showProgress());
-        mainLayout.addView(progressButton);
-
-        addSpace();
-
-        Button changeStudent = menuButton("👤 تغيير الطالب");
-        changeStudent.setOnClickListener(v -> {
-            prefs.edit().clear().apply();
-            studentName = "";
-            stars = 0;
-            showStudentDialog();
-        });
-
-        mainLayout.addView(changeStudent);
     }
 
-    private void showLetters() {
-
-        clearPage("🔤 الحروف الهجائية");
-
-        for (int i = 0; i < letters.length; i++) {
-
-            final int index = i;
-
-            Button b = menuButton(
-                    letters[i] + "   " + letterNames[i]
-            );
-
-            b.setOnClickListener(v -> {
-
-                stars++;
-                prefs.edit().putInt("stars", stars).apply();
-
-                new AlertDialog.Builder(this)
-                        .setTitle("الحرف " + letters[index])
-                        .setMessage(
-                                "اسم الحرف: " + letterNames[index] +
-                                "\n\nأحسنت يا " + studentName + "! ⭐"
-                        )
-                        .setPositiveButton("التالي", null)
-                        .show();
-            });
-
-            mainLayout.addView(b);
-        }
-
-        addBackButton();
-    }
-
-    private void showMovements() {
-
-        clearPage("َ ِ ُ الحركات");
-
-        addLesson(
-                "الفتحة",
-                "بَ",
-                "بَاء"
-        );
-
-        addLesson(
-                "الكسرة",
-                "بِ",
-                "بِاء"
-        );
-
-        addLesson(
-                "الضمة",
-                "بُ",
-                "بُاء"
-        );
-
-        addBackButton();
-    }
-
-    private void showMadd() {
-
-        clearPage("📏 المدود والمقاطع");
-
-        addLesson("المد بالألف", "بَا", "بَاب");
-        addLesson("المد بالواو", "بُو", "نُور");
-        addLesson("المد بالياء", "بِي", "فِيل");
-
-        addBackButton();
-    }
-
-    private void showWords() {
-
-        clearPage("🧩 الكلمات");
-
-        addLesson("كلمة", "بَاب", "باب");
-        addLesson("كلمة", "كِتَاب", "كتاب");
-        addLesson("كلمة", "قَلَم", "قلم");
-        addLesson("كلمة", "مَوْز", "موز");
-
-        addBackButton();
-    }
-
-    private void showSentences() {
-
-        clearPage("📖 الجمل");
-
-        addLesson("جملة", "هَذَا كِتَابٌ.", "اقرأ الجملة");
-        addLesson("جملة", "هَذَا قَلَمٌ.", "اقرأ الجملة");
-        addLesson("جملة", "أَكَلَ أَحْمَدُ التُّفَّاحَةَ.", "اقرأ الجملة");
-
-        addBackButton();
-    }
-
-    private void showUnderstanding() {
-
-        clearPage("🧠 تدريبات الفهم");
-
-        TextView q = textView(
-                "ما لون التفاحة؟",
-                25,
-                Color.DKGRAY
-        );
-
-        mainLayout.addView(q);
-
-        String[] answers = {"أحمر", "أزرق", "أخضر"};
-
-        for (String answer : answers) {
-
-            Button b = menuButton(answer);
-
-            b.setOnClickListener(v -> {
-
-                if (answer.equals("أحمر")) {
-                    stars++;
-                    prefs.edit().putInt("stars", stars).apply();
-
-                    Toast.makeText(
-                            this,
-                            "أحسنت! ⭐ +1",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                } else {
-                    Toast.makeText(
-                            this,
-                            "حاول مرة أخرى",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-            });
-
-            mainLayout.addView(b);
-        }
-
-        addBackButton();
-    }
-
-    private void showGame() {
-
-        clearPage("🎮 لعبة تمييز الحرف");
-
-        TextView question = textView(
-                "اختر الحرف: ب",
-                30,
-                Color.rgb(30, 80, 160)
-        );
-
-        mainLayout.addView(question);
-
-        String[] options = {"ت", "ب", "ث", "ن"};
-
-        for (String option : options) {
-
-            Button b = menuButton(option);
-
-            b.setOnClickListener(v -> {
-
-                if (option.equals("ب")) {
-
-                    stars += 2;
-                    prefs.edit().putInt("stars", stars).apply();
-
-                    Toast.makeText(
-                            this,
-                            "رائع! ⭐⭐ +2",
-                            Toast.LENGTH_SHORT
-                    ).show();
-
-                } else {
-
-                    Toast.makeText(
-                            this,
-                            "حاول مرة أخرى",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-            });
-
-            mainLayout.addView(b);
-        }
-
-        addBackButton();
-    }
-
-    private void showWriting() {
-
-        clearPage("✍️ تدريب الكتابة");
-
-        TextView instruction = textView(
-                "تدرّب على كتابة الحرف",
-                24,
-                Color.DKGRAY
-        );
-
-        mainLayout.addView(instruction);
-
-        EditText writing = new EditText(this);
-        writing.setText("ا");
-        writing.setTextSize(70);
-        writing.setGravity(Gravity.CENTER);
-        writing.setHint("اكتب الحرف هنا");
-
-        mainLayout.addView(
-                writing,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        220
-                )
-        );
-
-        Button done = menuButton("⭐ أنهيت التدريب");
-
-        done.setOnClickListener(v -> {
-
-            stars++;
-            prefs.edit().putInt("stars", stars).apply();
-
-            Toast.makeText(
-                    this,
-                    "أحسنت! ⭐ +1",
-                    Toast.LENGTH_SHORT
-            ).show();
-        });
-
-        mainLayout.addView(done);
-
-        addBackButton();
-    }
-
-    private void showProgress() {
-
-        clearPage("⭐ التقدم والنجوم");
-
-        TextView progress = textView(
-                "الطالب: " + studentName +
-                        "\n\n⭐ مجموع النجوم: " + stars +
-                        "\n\n🔤 الحروف: 28 حرفًا" +
-                        "\n📚 الكلمات والجمل" +
-                        "\n🎮 الألعاب والتدريبات" +
-                        "\n✍️ الكتابة",
-                23,
-                Color.DKGRAY
-        );
-
-        mainLayout.addView(progress);
-
-        Button reset = menuButton("إعادة النجوم إلى الصفر");
-
-        reset.setOnClickListener(v -> {
-
-            stars = 0;
-            prefs.edit().putInt("stars", 0).apply();
-
-            showProgress();
-        });
-
-        mainLayout.addView(reset);
-
-        addBackButton();
-    }
-
-    private void addLesson(
-            String title,
-            String example,
-            String description
-    ) {
-
-        TextView t = textView(
-                title + "\n\n" + example +
-                        "\n" + description,
-                26,
-                Color.DKGRAY
-        );
-
-        t.setPadding(20, 30, 20, 30);
-
-        mainLayout.addView(t);
-    }
-
-    private Button menuButton(String text) {
-
-        Button b = new Button(this);
-
-        b.setText(text);
-        b.setTextSize(20);
-        b.setAllCaps(false);
-        b.setGravity(Gravity.CENTER);
-        b.setPadding(15, 20, 15, 20);
-
-        LinearLayout.LayoutParams p =
-                new LinearLayout.LayoutParams(
-                        -1,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-
-        p.setMargins(5, 8, 5, 8);
-
-        b.setLayoutParams(p);
-
-        return b;
-    }
-
-    private TextView textView(
-            String text,
-            int size,
-            int color
-    ) {
-
+    private TextView title(String text) {
         TextView t = new TextView(this);
-
         t.setText(text);
-        t.setTextSize(size);
-        t.setTextColor(color);
+        t.setTextSize(27);
+        t.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        t.setTextColor(Color.rgb(25, 70, 120));
         t.setGravity(Gravity.CENTER);
-        t.setPadding(10, 15, 10, 15);
-        t.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        t.setPadding(8, 18, 8, 18);
+
+        root.addView(t, new LinearLayout.LayoutParams(
+                -1,
+                -2
+        ));
 
         return t;
     }
 
-    private void clearPage(String title) {
+    private Button menuButton(String text) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setTextSize(19);
+        b.setAllCaps(false);
+        b.setPadding(10, 10, 10, 10);
 
-        mainLayout.removeAllViews();
+        LinearLayout.LayoutParams p =
+                new LinearLayout.LayoutParams(-1, -2);
 
-        TextView t = textView(
-                title,
-                30,
-                Color.rgb(25, 95, 180)
-        );
+        p.setMargins(5, 7, 5, 7);
 
-        t.setTypeface(
-                Typeface.DEFAULT,
-                Typeface.BOLD
-        );
+        root.addView(b, p);
 
-        mainLayout.addView(t);
-
-        addSpace();
+        return b;
     }
 
-    private void addBackButton() {
-
-        Button back = menuButton("⬅️ العودة للرئيسية");
-
-        back.setOnClickListener(v -> showHome());
-
-        mainLayout.addView(back);
+    private void speak(String text) {
+        if (tts != null) {
+            tts.speak(
+                    text,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "huroofna_" + System.currentTimeMillis()
+            );
+        }
     }
 
-    private void addSpace() {
+    private void addStar() {
+        stars++;
+        prefs.edit().putInt("stars", stars).apply();
+    }
 
-        Space space = new Space(this);
+    private void showHome() {
+        prepareRoot();
 
-        mainLayout.addView(
-                space,
-                new LinearLayout.LayoutParams(
-                        1,
-                        15
-                )
+        title("🌟 حروفنا 🌟");
+
+        TextView welcome = new TextView(this);
+        welcome.setText(
+                "أهلًا يا " + studentName + "\n" +
+                "نجومك الحالية ⭐ " + stars
         );
+        welcome.setTextSize(21);
+        welcome.setGravity(Gravity.CENTER);
+        welcome.setPadding(10, 5, 10, 20);
+
+        root.addView(welcome);
+
+        Button lettersBtn = menuButton("🔤 الحروف الهجائية");
+        lettersBtn.setOnClickListener(v -> showLetters());
+
+        Button groupsBtn = menuButton("📚 مجموعات الحروف");
+        groupsBtn.setOnClickListener(v -> showGroups());
+
+        Button movementsBtn = menuButton("َ ِ ُ الحركات");
+        movementsBtn.setOnClickListener(v -> showMovements());
+
+        Button maddBtn = menuButton("📏 المدود والمقاطع");
+        maddBtn.setOnClickListener(v -> showMadd());
+
+        Button wordsBtn = menuButton("🧩 الكلمات والصور");
+        wordsBtn.setOnClickListener(v -> showWords());
+
+        Button sentencesBtn = menuButton("📖 الجمل");
+        sentencesBtn.setOnClickListener(v -> showSentences());
+
+        Button understandingBtn = menuButton("🧠 تدريبات الفهم");
+        understandingBtn.setOnClickListener(v -> showUnderstanding());
+
+        Button numbersBtn = menuButton("🔢 الأرقام والحساب الأولي");
+        numbersBtn.setOnClickListener(v -> showNumbers());
+
+        Button gameBtn = menuButton("🎮 لعبة تمييز الحرف");
+        gameBtn.setOnClickListener(v -> showGame());
+
+        Button writingBtn = menuButton("✍️ تدريب الكتابة");
+        writingBtn.setOnClickListener(v -> showWriting());
+
+        Button progressBtn = menuButton("⭐ تقدّم الطالب");
+        progressBtn.setOnClickListener(v -> showProgress());
+
+        Button changeBtn = menuButton("👤 تغيير الطالب");
+        changeBtn.setOnClickListener(v -> askStudentName());
     }
-}
+
+    private void showLetters() {
+        prepareRoot();
+        title("🔤 الحروف الهجائية");
+
+        for (int i = 0; i < letters.length; i++) {
+            final int index = i;
+
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.HORIZONTAL);
+            card.setGravity(Gravity.CENTER_VERTICAL);
+            card.setPadding(12, 12, 12, 12);
+
+            TextView picture = new TextView(this);
+            picture.setText(emoji[i]);
+            picture.setTextSize(35);
+            picture.setGravity(Gravity.CENTER);
+
+            TextView letter = new TextView(this);
+            letter.setText(
+                    letters[i] + "\n" +
+                    letterNames[i] + "\n" +
+                    words[i]
+            );
+            letter.setTextSize(22);
+            letter.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            letter.setGravity(Gravity.CENTER);
+
+            Button
