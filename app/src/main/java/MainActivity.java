@@ -182,9 +182,72 @@ public class MainActivity extends Activity {
     }
 
     private void showHome() {
-        prepareRoot();
+    prepareRoot();
 
-        title("🌟 حروفنا 🌟");
+    TextView logo = title("🌟 حروفنا 🌟");
+
+    TextView subtitle = new TextView(this);
+    subtitle.setText("تعلم .. نقرأ .. نكتب .. نبدع");
+    subtitle.setTextSize(18);
+    subtitle.setGravity(Gravity.CENTER);
+    subtitle.setTextColor(Color.rgb(25, 100, 170));
+    root.addView(subtitle);
+
+    TextView welcome = new TextView(this);
+    welcome.setText(
+            "👦 أهلاً يا " + studentName +
+            "\n⭐ نجومك: " + stars
+    );
+    welcome.setTextSize(20);
+    welcome.setGravity(Gravity.CENTER);
+    welcome.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+    welcome.setTextColor(Color.rgb(40, 80, 120));
+    welcome.setPadding(10, 15, 10, 15);
+    root.addView(welcome);
+
+    LinearLayout row1 = new LinearLayout(this);
+    row1.setOrientation(LinearLayout.HORIZONTAL);
+
+    LinearLayout row2 = new LinearLayout(this);
+    row2.setOrientation(LinearLayout.HORIZONTAL);
+
+    LinearLayout row3 = new LinearLayout(this);
+    row3.setOrientation(LinearLayout.HORIZONTAL);
+
+    LinearLayout row4 = new LinearLayout(this);
+    row4.setOrientation(LinearLayout.HORIZONTAL);
+
+    addHomeCard(row1, "🔤\nالحروف الهجائية", 1);
+    addHomeCard(row1, "🧩\nمجموعات الحروف", 2);
+    addHomeCard(row1, "َ ِ ُ\nالحركات", 3);
+
+    addHomeCard(row2, "📏\nالمدود والمقاطع", 4);
+    addHomeCard(row2, "🍎\nالكلمات", 5);
+    addHomeCard(row2, "📖\nالجمل", 6);
+
+    addHomeCard(row3, "🧠\nتدريبات الفهم", 7);
+    addHomeCard(row3, "🔢\nالأرقام ١–١٠", 8);
+    addHomeCard(row3, "🎮\nلعبة تمييز الحرف", 9);
+
+    addHomeCard(row4, "✍️\nتدريب الكتابة", 10);
+    addHomeCard(row4, "⭐\nتقدمي والنجوم", 11);
+    addHomeCard(row4, "👤\nتغيير الطالب", 12);
+
+    root.addView(row1);
+    root.addView(row2);
+    root.addView(row3);
+    root.addView(row4);
+
+    TextView footer = new TextView(this);
+    footer.setText("🌱 معًا نحو إتقان القراءة والكتابة 🌱");
+    footer.setTextSize(18);
+    footer.setGravity(Gravity.CENTER);
+    footer.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+    footer.setTextColor(Color.rgb(30, 110, 90));
+    footer.setPadding(5, 20, 5, 10);
+
+    root.addView(footer);
+}
 
         TextView welcome = new TextView(this);
         welcome.setText(
@@ -236,8 +299,134 @@ public class MainActivity extends Activity {
             studentName = "";
             askStudent();
         });
+    } (private void addHomeCard(LinearLayout row, String text, int type) {
+
+    Button card = new Button(this);
+
+    card.setText(text);
+    card.setTextSize(15);
+    card.setTextColor(Color.WHITE);
+    card.setGravity(Gravity.CENTER);
+    card.setAllCaps(false);
+    card.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+
+    int color;
+
+    switch (type) {
+        case 1:
+            color = Color.rgb(235, 70, 120);
+            break;
+        case 2:
+            color = Color.rgb(245, 155, 20);
+            break;
+        case 3:
+            color = Color.rgb(20, 145, 220);
+            break;
+        case 4:
+            color = Color.rgb(105, 75, 205);
+            break;
+        case 5:
+            color = Color.rgb(75, 180, 55);
+            break;
+        case 6:
+            color = Color.rgb(230, 65, 130);
+            break;
+        case 7:
+            color = Color.rgb(20, 175, 180);
+            break;
+        case 8:
+            color = Color.rgb(120, 80, 205);
+            break;
+        case 9:
+            color = Color.rgb(245, 165, 15);
+            break;
+        case 10:
+            color = Color.rgb(30, 145, 220);
+            break;
+        case 11:
+            color = Color.rgb(20, 170, 145);
+            break;
+        default:
+            color = Color.rgb(220, 70, 145);
+            break;
     }
 
+    android.graphics.drawable.GradientDrawable bg =
+            new android.graphics.drawable.GradientDrawable();
+
+    bg.setColor(color);
+    bg.setCornerRadius(28);
+    bg.setStroke(3, Color.WHITE);
+
+    card.setBackground(bg);
+
+    LinearLayout.LayoutParams params =
+            new LinearLayout.LayoutParams(
+                    0,
+                    125,
+                    1
+            );
+
+    params.setMargins(5, 5, 5, 5);
+
+    row.addView(card, params);
+
+    card.setOnClickListener(v -> {
+
+        switch (type) {
+
+            case 1:
+                showLetters();
+                break;
+
+            case 2:
+                showGroups();
+                break;
+
+            case 3:
+                showMovements();
+                break;
+
+            case 4:
+                showMadd();
+                break;
+
+            case 5:
+                showWords();
+                break;
+
+            case 6:
+                showSentences();
+                break;
+
+            case 7:
+                showUnderstanding();
+                break;
+
+            case 8:
+                showNumbers();
+                break;
+
+            case 9:
+                showGame();
+                break;
+
+            case 10:
+                showWriting();
+                break;
+
+            case 11:
+                showProgress();
+                break;
+
+            case 12:
+                prefs.edit().remove("student").apply();
+                studentName = "";
+                askStudent();
+                break;
+        }
+    });
+}
     private void showLetters() {
         prepareRoot();
         title("🔤 الحروف الهجائية");
