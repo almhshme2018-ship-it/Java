@@ -3,6 +3,8 @@ package com.yemeni.huroofna;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -30,7 +32,7 @@ public class MainActivity extends Activity {
 
     private final String[] letters = {
             "ا","ب","ت","ث","ج","ح","خ","د","ذ","ر","ز","س","ش",
-            "ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","هـ","و","ي"
+            "ص","ض","ط","ظ","ع","غ","ف","ق","ك","ل","م","ن","ه","و","ي"
     };
 
     private final String[] names = {
@@ -40,16 +42,16 @@ public class MainActivity extends Activity {
     };
 
     private final String[] words = {
-            "أسد","بطة","تفاحة","ثعلب","جمل","حصان","خروف","دب",
-            "ذرة","رمان","زهرة","سمكة","شمس","صقر","ضفدع","طائرة",
-            "ظرف","عنب","غزال","فيل","قمر","كتاب","ليمون","موز",
+            "أسد","بطة","تفاحة","ثعلب","جمل","حوت","خروف","دب",
+            "ذرة","رمان","زهرة","سمكة","شجرة","صقر","ضفدع","طائرة",
+            "ظبي","عصفور","غزال","فراشة","قلم","كتاب","ليمون","موز",
             "نحلة","هلال","وردة","يد"
     };
 
     private final String[] pictures = {
-            "🦁","🦆","🍎","🦊","🐪","🐎","🐑","🐻",
-            "🌽","🍎","🌸","🐟","☀️","🦅","🐸","✈️",
-            "✉️","🍇","🦌","🐘","🌙","📖","🍋","🍌",
+            "🦁","🦆","🍎","🦊","🐪","🐋","🐑","🐻",
+            "🌽","🍎","🌸","🐟","🌳","🦅","🐸","✈️",
+            "🦌","🐦","🦌","🦋","✏️","📖","🍋","🍌",
             "🐝","🌙","🌹","✋"
     };
 
@@ -109,17 +111,62 @@ public class MainActivity extends Activity {
     }
 
     private void prepareRoot() {
+        LinearLayout outer = new LinearLayout(this);
+        outer.setOrientation(LinearLayout.VERTICAL);
+        outer.setBackgroundColor(Color.rgb(246, 251, 255));
+
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
-        scroll.setBackgroundColor(Color.rgb(245, 250, 255));
+        scroll.setBackgroundColor(Color.rgb(246, 251, 255));
 
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.setPadding(16, 16, 16, 24);
-
+        root.setPadding(dp(10), dp(10), dp(10), dp(18));
         scroll.addView(root);
-        setContentView(scroll);
+
+        outer.addView(scroll, new LinearLayout.LayoutParams(
+                -1, 0, 1f));
+
+        LinearLayout nav = new LinearLayout(this);
+        nav.setOrientation(LinearLayout.HORIZONTAL);
+        nav.setGravity(Gravity.CENTER);
+        nav.setPadding(dp(4), dp(3), dp(4), dp(3));
+        GradientDrawable navBg = new GradientDrawable();
+        navBg.setColor(Color.WHITE);
+        navBg.setStroke(dp(1), Color.rgb(220, 232, 244));
+        nav.setBackground(navBg);
+
+        Button home = navButton("⌂\nالرئيسية");
+        Button lettersNav = navButton("🔤\nالحروف");
+        Button gamesNav = navButton("🎮\nالألعاب");
+        Button progressNav = navButton("⭐\nالتقدم");
+        home.setOnClickListener(v -> showHome());
+        lettersNav.setOnClickListener(v -> showLetters());
+        gamesNav.setOnClickListener(v -> showGame());
+        progressNav.setOnClickListener(v -> showProgress());
+        nav.addView(home, new LinearLayout.LayoutParams(0, dp(62), 1f));
+        nav.addView(lettersNav, new LinearLayout.LayoutParams(0, dp(62), 1f));
+        nav.addView(gamesNav, new LinearLayout.LayoutParams(0, dp(62), 1f));
+        nav.addView(progressNav, new LinearLayout.LayoutParams(0, dp(62), 1f));
+
+        outer.addView(nav, new LinearLayout.LayoutParams(-1, dp(68)));
+        setContentView(outer);
+    }
+
+    private Button navButton(String text) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setTextSize(12);
+        b.setAllCaps(false);
+        b.setGravity(Gravity.CENTER);
+        b.setTextColor(Color.rgb(25, 90, 160));
+        b.setPadding(2, 0, 2, 0);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Color.WHITE);
+        bg.setCornerRadius(dp(18));
+        b.setBackground(bg);
+        return b;
     }
 
     private TextView title(String text) {
@@ -158,45 +205,62 @@ public class MainActivity extends Activity {
         return b;
     }
 
+    private Button controlButton(String text) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setTextSize(17);
+        b.setAllCaps(false);
+        b.setTextColor(Color.rgb(35, 55, 75));
+        b.setGravity(Gravity.CENTER);
+        b.setPadding(6, 4, 6, 4);
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Color.WHITE);
+        bg.setCornerRadius(28);
+        bg.setStroke(2, Color.rgb(210, 225, 240));
+        b.setBackground(bg);
+        return b;
+    }
+
     private Button homeCard(String icon, String text, int backgroundColor) {
         Button b = new Button(this);
         b.setText(icon + "\n" + text);
-        b.setTextSize(15);
+        b.setTextSize(16);
         b.setAllCaps(false);
         b.setGravity(Gravity.CENTER);
         b.setTextColor(Color.rgb(35, 55, 75));
         b.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        b.setPadding(4, 8, 4, 8);
+        b.setPadding(dp(4), dp(7), dp(4), dp(7));
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(backgroundColor);
-        bg.setCornerRadius(30);
-        bg.setStroke(2, Color.WHITE);
+        bg.setCornerRadius(dp(24));
+        bg.setStroke(dp(2), Color.WHITE);
         b.setBackground(bg);
 
         GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
         lp.width = 0;
-        lp.height = 112;
+        lp.height = dp(112);
         lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-        lp.setMargins(5, 5, 5, 5);
+        lp.setMargins(dp(4), dp(4), dp(4), dp(4));
         b.setLayoutParams(lp);
         return b;
     }
 
     private TextView homeHeader() {
         TextView header = new TextView(this);
-        header.setText("📚  حروفنا  ✏️\n\nأهلًا يا " + studentName +
-                "\nنجومك ⭐ " + stars);
-        header.setTextSize(22);
+        header.setText("📚  حروفنا  ✏️\n\nمرحبًا يا " + studentName +
+                "\n🎙️ معلمنا أ/ هشام    ⭐ " + stars);
+        header.setTextSize(21);
         header.setGravity(Gravity.CENTER);
         header.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         header.setTextColor(Color.WHITE);
-        header.setPadding(15, 24, 15, 24);
+        header.setPadding(dp(12), dp(18), dp(12), dp(18));
 
         GradientDrawable bg = new GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{Color.rgb(74, 177, 230), Color.rgb(43, 125, 190)});
-        bg.setCornerRadius(36);
+                new int[]{Color.rgb(22, 151, 232), Color.rgb(31, 103, 194)});
+        bg.setCornerRadius(dp(28));
         header.setBackground(bg);
 
         root.addView(header, new LinearLayout.LayoutParams(
@@ -235,24 +299,30 @@ public class MainActivity extends Activity {
 
     private void showHome() {
         prepareRoot();
-
         homeHeader();
 
         TextView hint = new TextView(this);
-        hint.setText("🌈 اختر نشاطًا وابدأ رحلة التعلم");
-        hint.setTextSize(18);
+        hint.setText("🌈 هيا نتعلم ونلعب ونردد الحروف معًا!");
+        hint.setTextSize(17);
         hint.setGravity(Gravity.CENTER);
-        hint.setTextColor(Color.rgb(65, 95, 120));
-        hint.setPadding(8, 12, 8, 8);
+        hint.setTextColor(Color.rgb(55, 90, 120));
+        hint.setPadding(dp(6), dp(10), dp(6), dp(6));
         root.addView(hint);
 
+        Button songButton = homeCard("🎵", "أنشودة الحروف الهجائية", Color.rgb(255, 220, 92));
+        songButton.setTextSize(17);
+        songButton.setOnClickListener(v -> showAlphabetSong());
+        LinearLayout.LayoutParams songLp = new LinearLayout.LayoutParams(-1, dp(72));
+        songLp.setMargins(dp(4), dp(6), dp(4), dp(8));
+        root.addView(songButton, songLp);
+
         GridLayout grid = new GridLayout(this);
-        grid.setColumnCount(3);
+        grid.setColumnCount(2);
         grid.setAlignmentMode(GridLayout.ALIGN_BOUNDS);
 
         int[] colors = {
-                Color.rgb(255, 236, 150), Color.rgb(183, 229, 255),
-                Color.rgb(207, 245, 190), Color.rgb(255, 204, 218),
+                Color.rgb(255, 235, 130), Color.rgb(183, 229, 255),
+                Color.rgb(202, 242, 187), Color.rgb(255, 204, 218),
                 Color.rgb(216, 203, 255), Color.rgb(255, 220, 174)
         };
 
@@ -264,7 +334,7 @@ public class MainActivity extends Activity {
         groupsButton.setOnClickListener(v -> showGroups());
         grid.addView(groupsButton);
 
-        Button movementsButton = homeCard("َُِ", "الحركات", colors[2]);
+        Button movementsButton = homeCard("َ ِ ُ", "الحركات", colors[2]);
         movementsButton.setOnClickListener(v -> showMovements());
         grid.addView(movementsButton);
 
@@ -308,16 +378,156 @@ public class MainActivity extends Activity {
         });
         grid.addView(changeStudent);
 
-        root.addView(grid, new LinearLayout.LayoutParams(
-                -1, LinearLayout.LayoutParams.WRAP_CONTENT));
+        root.addView(grid, new LinearLayout.LayoutParams(-1, LinearLayout.LayoutParams.WRAP_CONTENT));
 
         TextView footer = new TextView(this);
-        footer.setText("🌱 تعلّم حرفًا كل يوم... وكن بطلًا ⭐");
+        footer.setText("🌱 معًا نحو القراءة والكتابة والنجاح ⭐");
         footer.setTextSize(16);
         footer.setGravity(Gravity.CENTER);
-        footer.setTextColor(Color.rgb(65, 105, 75));
-        footer.setPadding(8, 18, 8, 12);
+        footer.setTextColor(Color.rgb(45, 110, 75));
+        footer.setPadding(dp(8), dp(14), dp(8), dp(10));
         root.addView(footer);
+    }
+
+    private void showAlphabetSong() {
+        prepareRoot();
+
+        TextView top = new TextView(this);
+        top.setText("🎵 أنشودة الحروف الهجائية");
+        top.setTextSize(24);
+        top.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        top.setGravity(Gravity.CENTER);
+        top.setTextColor(Color.WHITE);
+        top.setPadding(dp(10), dp(14), dp(10), dp(14));
+        GradientDrawable topBg = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{Color.rgb(19, 151, 232), Color.rgb(40, 94, 202)});
+        topBg.setCornerRadius(dp(24));
+        top.setBackground(topBg);
+        root.addView(top, new LinearLayout.LayoutParams(-1, dp(66)));
+
+        TextView teacher = new TextView(this);
+        teacher.setText("🎙️ معلمنا أ/ هشام\nهيا نتعلم الحروف ونرددها معًا!");
+        teacher.setTextSize(19);
+        teacher.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        teacher.setGravity(Gravity.CENTER);
+        teacher.setTextColor(Color.rgb(30, 75, 130));
+        teacher.setPadding(dp(8), dp(10), dp(8), dp(10));
+        root.addView(teacher, new LinearLayout.LayoutParams(-1, dp(82)));
+
+        final TextView progress = new TextView(this);
+        progress.setText("1 / 28");
+        progress.setTextSize(16);
+        progress.setGravity(Gravity.CENTER);
+        progress.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        root.addView(progress, new LinearLayout.LayoutParams(-1, dp(38)));
+
+        final TextView bigLetter = new TextView(this);
+        bigLetter.setText("ا");
+        bigLetter.setTextSize(78);
+        bigLetter.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        bigLetter.setGravity(Gravity.CENTER);
+        bigLetter.setTextColor(Color.rgb(232, 38, 50));
+        root.addView(bigLetter, new LinearLayout.LayoutParams(-1, dp(105)));
+
+        final TextView picture = new TextView(this);
+        picture.setText("🦁");
+        picture.setTextSize(58);
+        picture.setGravity(Gravity.CENTER);
+        root.addView(picture, new LinearLayout.LayoutParams(-1, dp(82)));
+
+        final TextView word = new TextView(this);
+        word.setText("أسد");
+        word.setTextSize(30);
+        word.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        word.setGravity(Gravity.CENTER);
+        word.setTextColor(Color.rgb(25, 35, 50));
+        root.addView(word, new LinearLayout.LayoutParams(-1, dp(54)));
+
+        Button listen = homeCard("🔊", "استمع", Color.rgb(71, 151, 240));
+        listen.setTextColor(Color.WHITE);
+        root.addView(listen, new LinearLayout.LayoutParams(-1, dp(64)));
+
+        LinearLayout controls = new LinearLayout(this);
+        controls.setGravity(Gravity.CENTER);
+        controls.setOrientation(LinearLayout.HORIZONTAL);
+        Button prev = controlButton("◀ السابق");
+        Button play = controlButton("▶ تشغيل");
+        Button next = controlButton("التالي ▶");
+        controls.addView(prev, new LinearLayout.LayoutParams(0, dp(58), 1f));
+        controls.addView(play, new LinearLayout.LayoutParams(0, dp(58), 1f));
+        controls.addView(next, new LinearLayout.LayoutParams(0, dp(58), 1f));
+        root.addView(controls, new LinearLayout.LayoutParams(-1, dp(68)));
+
+        final TextView hint = new TextView(this);
+        hint.setText("🎙️ معلمنا أ/ هشام — اسمع ثم ردد");
+        hint.setTextSize(17);
+        hint.setGravity(Gravity.CENTER);
+        hint.setTextColor(Color.rgb(35, 80, 125));
+        root.addView(hint, new LinearLayout.LayoutParams(-1, dp(55)));
+
+        Button back = controlButton("⬅ العودة للرئيسية");
+        back.setOnClickListener(v -> showHome());
+        root.addView(back, new LinearLayout.LayoutParams(-1, dp(58)));
+
+        final int[] current = {0};
+        final Handler handler = new Handler(Looper.getMainLooper());
+        final boolean[] running = {false};
+
+        Runnable[] step = new Runnable[1];
+        step[0] = () -> {
+            if (!running[0]) return;
+            if (current[0] >= letters.length) {
+                running[0] = false;
+                addStar();
+                hint.setText("🎉 أحسنت! أكملت أنشودة الحروف ⭐");
+                progress.setText("28 / 28   ⭐");
+                return;
+            }
+            int i = current[0];
+            bigLetter.setText(letters[i]);
+            picture.setText(pictures[i]);
+            word.setText(words[i]);
+            progress.setText((i + 1) + " / 28");
+            hint.setText("🎙️ معلمنا أ/ هشام — ردد: " + names[i]);
+            speak(names[i] + ". " + words[i]);
+            current[0]++;
+            handler.postDelayed(step[0], 1900);
+        };
+
+        Runnable showCurrent = () -> {
+            int i = Math.max(0, Math.min(current[0], letters.length - 1));
+            bigLetter.setText(letters[i]);
+            picture.setText(pictures[i]);
+            word.setText(words[i]);
+            progress.setText((i + 1) + " / 28");
+        };
+
+        listen.setOnClickListener(v -> {
+            int i = Math.max(0, Math.min(current[0] - 1, letters.length - 1));
+            speak(names[i] + ". " + words[i]);
+        });
+        play.setOnClickListener(v -> {
+            if (!running[0]) {
+                running[0] = true;
+                if (current[0] >= letters.length) current[0] = 0;
+                step[0].run();
+            }
+        });
+        prev.setOnClickListener(v -> {
+            running[0] = false;
+            handler.removeCallbacks(step[0]);
+            current[0] = Math.max(0, current[0] - 1);
+            showCurrent.run();
+            speak(names[current[0]] + ". " + words[current[0]]);
+        });
+        next.setOnClickListener(v -> {
+            running[0] = false;
+            handler.removeCallbacks(step[0]);
+            current[0] = Math.min(letters.length - 1, current[0] + 1);
+            showCurrent.run();
+            speak(names[current[0]] + ". " + words[current[0]]);
+        });
     }
 
     private void showLetters() {
@@ -692,6 +902,10 @@ public class MainActivity extends Activity {
         });
 
         backButton();
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
     }
 
     @Override
